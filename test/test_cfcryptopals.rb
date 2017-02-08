@@ -86,4 +86,12 @@ class CfcryptoTest < Minitest::Test
     plaintext = Cfcrypto.xor_key(input, key)
     assert_equal expected, plaintext
   end
+
+  def test_aes_ecb_decrypt
+    input = Cfcrypto.b64decode(File.readlines("test/1-7.txt").join(""))
+    expected = File.readlines("test/1-7-expected.txt").join("")
+    key = "YELLOW SUBMARINE"
+    plaintext = Cfcrypto.aes_ecb_decrypt(key, input)
+    assert_equal expected, plaintext
+  end
 end

@@ -1,3 +1,5 @@
+require "openssl"
+
 module Cfcrypto
   def self.hex2str(str)
     [str].pack("H*")
@@ -171,5 +173,17 @@ module Cfcrypto
     end
 
     return best_key
+  end
+
+  def self.aes_ecb_decrypt(key, msg)
+    cipher = OpenSSL::Cipher.new "AES-128-ECB"
+    # important to choose mode before assigning key, etc
+    # see: https://bugs.ruby-lang.org/issues/8720
+    cipher.decrypt
+    cipher.key = key
+    # no IV for ECB mode
+
+    # call Cipher#final to ensure the last block of data is handled correctly
+    cipher.update(msg) + cipher.final
   end
 end
