@@ -163,4 +163,21 @@ class CfcryptoTest < Minitest::Test
     plaintext = Cfcrypto.aes_cbc_decrypt("\x00" * 16, "YELLOW SUBMARINE", input)
     assert_equal expected, plaintext
   end
+
+  def test_generate_key
+    key = Cfcrypto.generate_key(16)
+    assert_equal 16, key.bytes.length
+  end
+
+  def test_aes_encrypt_oracle
+    # verify that the length is as expected
+    # length 22 so that prefix/suffix will bring it to length 32 to 42
+    # and pkcs7 padding will make sure it's 3 blocks (16 * 3 = 48) long
+    msg = "0123456789abcdef012345"
+    50.times { assert_equal 16 * 3, Cfcrypto.aes_encrypt_oracle(msg)[0].length }
+  end
+
+  def test_aes_encrypt_oracle_challenger
+    assert_equal true, Cfcrypto.aes_encrypt_oracle_challenger
+  end
 end
