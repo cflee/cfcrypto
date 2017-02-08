@@ -38,4 +38,4 @@ Style/StringLiterals:
 AllCops:
   Exclude:
     - 'bin/*'
-    - 'vendor/*'
+    - 'vendor/**/*'
