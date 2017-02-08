@@ -31,6 +31,12 @@ module Cfcrypto
     return res
   end
 
+  def self.xor_key(buf1, key)
+    buf2 = key * (buf1.length.to_f / key.length).ceil
+    buf2 = buf2[0..buf1.length-1]
+    xor(buf1, buf2)
+  end
+
   def self.chi_squared(obs, exp)
     # Pearson's chi-squared test of goodness of fit
     # obs and exp are arrays
