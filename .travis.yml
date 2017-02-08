@@ -1,3 +1,12 @@
 language: ruby
 rvm:
   - 2.4.0
+before_install:
+  # workaround for rainbow gem not being built due to a problem in rubygems
+  # see: https://github.com/sickill/rainbow/issues/48
+  #      https://github.com/rubygems/rubygems/commit/4c3b832
+  #      https://github.com/bbatsov/rubocop/pull/3952
+  # travis ci does not want to update the build image, so we must either update
+  # rubygems or pin a previous version of rainbow as workaround.
+  # see: https://github.com/travis-ci/travis-ci/issues/7204
+  - gem update --system
