@@ -127,4 +127,10 @@ class CfcryptoTest < Minitest::Test
     # input = File.readlines("test/1-8.txt").map { |x| Cfcrypto.hex2str(x.chomp) }
     # assert_equal [0], Cfcrypto.detect_ecb_from_list(input, 16)
   end
+
+  def test_pkcs7_padding
+    input = "YELLOW SUBMARINE"
+    expected = "YELLOW SUBMARINE\x04\x04\x04\x04"
+    assert_equal expected, Cfcrypto.pkcs7_padding(input, 20)
+  end
 end

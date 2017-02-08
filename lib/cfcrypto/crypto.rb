@@ -203,4 +203,9 @@ module Cfcrypto
     end
     result
   end
+
+  def self.pkcs7_padding(str, size)
+    remainder = size - (str.length % size)
+    str + remainder.chr * remainder
+  end
 end
