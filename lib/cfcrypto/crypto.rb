@@ -26,17 +26,17 @@ module Cfcrypto
   #   str2hex(res)
   # end
 
-  def self.xor(buf1, buf2)
+  def self.xor(str1, str2)
     # byte strings
-    raise "Buffers must be same length" if buf1.length != buf2.length
-    res = buf1.bytes.zip(buf2.bytes).map { |a, b| a^b }.pack("C*")
+    raise "strfers must be same length" if str1.length != str2.length
+    res = str1.bytes.zip(str2.bytes).map { |a, b| a^b }.pack("C*")
     return res
   end
 
-  def self.xor_key(buf1, key)
-    buf2 = key * (buf1.length.to_f / key.length).ceil
-    buf2 = buf2[0..buf1.length-1]
-    xor(buf1, buf2)
+  def self.xor_key(str1, key)
+    str2 = key * (str1.length.to_f / key.length).ceil
+    str2 = str2[0..str1.length-1]
+    xor(str1, str2)
   end
 
   def self.chi_squared(obs, exp)
