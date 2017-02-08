@@ -20,8 +20,9 @@ module Cfcrypto
   end
 
   def self.xor(str1, str2)
-    # byte strings
-    raise "strings must be same length" if str1.length != str2.length
+    # byte strings, so check length of String#bytes array, not String#length
+    # as some sequences may get interpreted as Unicode chars
+    raise "strings must be same length" if str1.bytes.length != str2.bytes.length
     str1.bytes.zip(str2.bytes).map { |a, b| a ^ b }.pack("C*")
   end
 
@@ -163,12 +164,26 @@ module Cfcrypto
     best_key
   end
 
-  def self.aes_ecb_decrypt(key, msg)
+  def self.aes_ecb_encrypt(key, msg, padding = true)
+    cipher = OpenSSL::Cipher.new "AES-128-ECB"
+    # important to choose mode before assigning key, etc
+    # see: https://bugs.ruby-lang.org/issues/8720
+    cipher.encrypt
+    cipher.key = key
+    cipher.padding = padding ? 1 : 0
+    # no IV for ECB mode
+
+    # call Cipher#final to ensure the last block of data is handled correctly
+    cipher.update(msg) + cipher.final
+  end
+
+  def self.aes_ecb_decrypt(key, msg, padding = true)
     cipher = OpenSSL::Cipher.new "AES-128-ECB"
     # important to choose mode before assigning key, etc
     # see: https://bugs.ruby-lang.org/issues/8720
     cipher.decrypt
     cipher.key = key
+    cipher.padding = padding ? 1 : 0
     # no IV for ECB mode
 
     # call Cipher#final to ensure the last block of data is handled correctly
@@ -207,5 +222,43 @@ module Cfcrypto
   def self.pkcs7_padding(str, size)
     remainder = size - (str.length % size)
     str + remainder.chr * remainder
+  end
+
+  def self.pkcs7_padding_remove(str)
+    qty = str[-1].ord
+    str[0..(-1 * qty) - 1]
+  end
+
+  def self.aes_cbc_encrypt(iv, key, msg)
+    blocks = split_blocks(pkcs7_padding(msg, 16), 16)
+    ciphertexts = []
+
+    # prev ciphertext block
+    prev_block = iv
+    blocks.map do |b|
+      prev_block = aes_ecb_encrypt(key, xor(prev_block, b), false)
+      ciphertexts << prev_block
+    end
+
+    ciphertexts.join("")
+  end
+
+  def self.aes_cbc_decrypt(iv, key, msg)
+    blocks = split_blocks(msg, 16)
+    plaintexts = []
+
+    # prev ciphertext block
+    prev_block = iv
+    blocks.each do |b|
+      # must decrypt with padding OFF so that it's possible to decrypt a single
+      # 16-byte block of ciphertext (instead of having 2 blocks, 2nd is padding)
+      xored_plaintext = aes_ecb_decrypt(key, b, false)
+      plaintexts << xor(prev_block, xored_plaintext)
+      prev_block = b
+    end
+
+    plaintexts[-1] = pkcs7_padding_remove(plaintexts[-1])
+
+    plaintexts.join("")
   end
 end

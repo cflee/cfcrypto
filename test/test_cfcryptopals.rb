@@ -89,12 +89,17 @@ class CfcryptoTest < Minitest::Test
     assert_equal expected, plaintext
   end
 
-  def test_aes_ecb_decrypt
+  def test_aes_ecb
+    # test decryption
     input = Cfcrypto.b64decode(File.readlines("test/1-7.txt").join(""))
     expected = File.readlines("test/1-7-expected.txt").join("")
     key = "YELLOW SUBMARINE"
     plaintext = Cfcrypto.aes_ecb_decrypt(key, input)
     assert_equal expected, plaintext
+
+    # test encryption
+    ciphertext = Cfcrypto.aes_ecb_encrypt(key, plaintext)
+    assert_equal input, ciphertext
   end
 
   def test_split_blocks
@@ -129,8 +134,33 @@ class CfcryptoTest < Minitest::Test
   end
 
   def test_pkcs7_padding
+    # test not-a-multiple-of-block-size case
     input = "YELLOW SUBMARINE"
     expected = "YELLOW SUBMARINE\x04\x04\x04\x04"
-    assert_equal expected, Cfcrypto.pkcs7_padding(input, 20)
+    padded = Cfcrypto.pkcs7_padding(input, 20)
+    assert_equal expected, padded
+    assert_equal input, Cfcrypto.pkcs7_padding_remove(padded)
+
+    # test multiple-of-block-size case
+    padded = Cfcrypto.pkcs7_padding(input, 16)
+    assert_equal "YELLOW SUBMARINE" + "\x10" * 16, padded
+    assert_equal input, Cfcrypto.pkcs7_padding_remove(padded)
+  end
+
+  def test_aes_cbc
+    # test encryption
+    iv = "\xDE\xAD\xBE\xEF" * 4
+    key = "YELLOW SUBMARINE"
+    msg = "Hello world xxxx" * 20
+    ciphertext = Cfcrypto.aes_cbc_encrypt(iv, key, msg)
+
+    # test decryption
+    assert_equal msg, Cfcrypto.aes_cbc_decrypt(iv, key, ciphertext)
+
+    # test decryption of provided ciphertext
+    input = Cfcrypto.b64decode(File.readlines("test/2-10.txt").join(""))
+    expected = File.readlines("test/2-10-expected.txt").join("")
+    plaintext = Cfcrypto.aes_cbc_decrypt("\x00" * 16, "YELLOW SUBMARINE", input)
+    assert_equal expected, plaintext
   end
 end
