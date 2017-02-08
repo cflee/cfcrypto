@@ -6,7 +6,7 @@ task default: [:rubocop, :test]
 desc "Run tests"
 Rake::TestTask.new do |t|
   # List of directories to added to $LOAD_PATH before running the tests.
-  # (default is ‘lib’)
+  # (default is 'lib')
   t.libs << "test"
 end
 
