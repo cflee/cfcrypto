@@ -19,15 +19,6 @@ module Cfcrypto
     str.unpack("m").first
   end
 
-  # def self.hex_xor(buf1, buf2)
-  #   # hex strings
-  #   raise "Buffers must be same length" if buf1.length != buf2.length
-  #   in1 = hex2str(buf1)
-  #   in2 = hex2str(buf2)
-  #   res = in1.bytes.zip(in2.bytes).map { |a, b| a ^ b }.pack("C*")
-  #   str2hex(res)
-  # end
-
   def self.xor(str1, str2)
     # byte strings
     raise "strings must be same length" if str1.length != str2.length
