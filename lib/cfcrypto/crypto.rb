@@ -114,4 +114,62 @@ module Cfcrypto
     end
     return likely_string, likely_key
   end
+
+  def self.hamming_dist(str1, str2)
+    # xor together, then compute hamming weight
+    xor(str1, str2).unpack("B*").first.count("1")
+  end
+
+  def self.attack_xor_key(str)
+    # determine likely key lengths
+    keysizes = []
+    2.upto(40) do |keysize|
+      # compute hamming distance of first keysize-length block against
+      # all subsequent ones, because just computing for the first two blocks
+      # yielded invalid key sizes at the top
+      dist_sum = 0
+      1.upto((str.length / keysize) - 1) do |i|
+        dist_sum += hamming_dist(str[0, keysize], str[i*keysize, keysize])
+      end
+      # could also compute an average of the hamming dist for each block
+      # combo... but we just need to normalize over str length here, sama-sama
+      norm_dist = dist_sum.to_f / str.length
+      keysizes << {keysize: keysize, norm_dist: norm_dist}
+    end
+    keysizes.sort_by! { |x| x[:norm_dist] }
+
+    # try top-k most likely keysizes (least hamming distance between blocks)
+    min_score = 1e100
+    best_key = ""
+    keysizes[0, 3].each do |cand|
+      # split into virtual blocks that contain ciphertext bytes for each byte
+      # of the key. so if keysize is 5, then each block contains every 5th byte
+      blocks_qty = cand[:keysize]
+      blocks = Array.new(blocks_qty) { [] }
+      str.chars.each_with_index do |e, i|
+        blocks[i % blocks_qty] << e
+      end
+
+      # find most likely key for each virtual block
+      cand_key = ""
+      blocks.each do |b|
+        key, score = attack_1char_xor(b.join(""))
+        if key != nil && key.length > 0
+          cand_key << key[0]
+        end
+      end
+
+      # skip this keysize if there's no viable candidate key
+      next if cand_key.length < cand[:keysize]
+
+      # compute english score to pick the best keysize (lowest score)
+      cand_score = english_score(xor_key(str, cand_key))
+      if cand_score < min_score
+        min_score = cand_score
+        best_key = cand_key
+      end
+    end
+
+    return best_key
+  end
 end

@@ -69,4 +69,21 @@ class CfcryptoTest < Minitest::Test
     observed = Cfcrypto.str2hex(Cfcrypto.xor_key(input, key))
     assert_equal expected, observed
   end
+
+  def test_hamming_dist
+    input1 = "this is a test"
+    input2 = "wokka wokka!!!"
+    assert_equal 37, Cfcrypto.hamming_dist(input1, input2)
+  end
+
+  def test_attack_xor_key
+    input = Cfcrypto.b64decode(File.readlines("test/1-6.txt").join(""))
+    # need to separate expected output into a file because every line has
+    # a single trailing space that text editors like to eat
+    expected = File.readlines("test/1-6-expected.txt").join("")
+
+    key = Cfcrypto.attack_xor_key(input)
+    plaintext = Cfcrypto.xor_key(input, key)
+    assert_equal expected, plaintext
+  end
 end
