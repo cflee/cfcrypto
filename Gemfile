@@ -5,7 +5,8 @@ gemspec
 
 ruby "2.4.0"
 
-group :test do
-  gem "rake"
+group :development, :test do
   gem "minitest"
+  gem "rake"
+  gem "rubocop", "~> 0.47.1", require: false
 end

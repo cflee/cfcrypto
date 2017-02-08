@@ -24,20 +24,19 @@ module Cfcrypto
   #   raise "Buffers must be same length" if buf1.length != buf2.length
   #   in1 = hex2str(buf1)
   #   in2 = hex2str(buf2)
-  #   res = in1.bytes.zip(in2.bytes).map { |a, b| a^b }.pack("C*")
+  #   res = in1.bytes.zip(in2.bytes).map { |a, b| a ^ b }.pack("C*")
   #   str2hex(res)
   # end
 
   def self.xor(str1, str2)
     # byte strings
     raise "strings must be same length" if str1.length != str2.length
-    res = str1.bytes.zip(str2.bytes).map { |a, b| a^b }.pack("C*")
-    return res
+    str1.bytes.zip(str2.bytes).map { |a, b| a ^ b }.pack("C*")
   end
 
   def self.xor_key(str1, key)
     str2 = key * (str1.length.to_f / key.length).ceil
-    str2 = str2[0..str1.length-1]
+    str2 = str2[0..str1.length - 1]
     xor(str1, str2)
   end
 
@@ -45,13 +44,13 @@ module Cfcrypto
     # Pearson's chi-squared test of goodness of fit
     # obs and exp are arrays
     raise "Distributions must be same length" if obs.length != exp.length
-    obs.zip(exp).map { |a, b| ((a.to_f - b) ** 2) / b }.inject(0, &:+)
+    obs.zip(exp).map { |a, b| ((a.to_f - b)**2) / b }.inject(0, &:+)
   end
 
   def self.count_freq(str)
     # only count alphabetical characters, not numbers or special chars
     str.upcase.gsub(/[^A-Z]/, "").chars
-      .reduce(Hash.new) { |m, x| m[x] == nil ? m[x] = 1 : m[x] += 1; m }
+      .each_with_object({}) { |x, m| m[x].nil? ? m[x] = 1 : m[x] += 1 }
   end
 
   def self.alpha_hash_to_array(hash)
@@ -67,7 +66,7 @@ module Cfcrypto
     "P" => 2.14, "G" => 1.87, "W" => 1.68, "Y" => 1.66, "B" => 1.48,
     "V" => 1.05, "K" => 0.54, "X" => 0.23, "J" => 0.16, "Q" => 0.12,
     "Z" => 0.09
-  }
+  }.freeze
 
   def self.english_score(str)
     # lower the better: closer to English letter frequency
@@ -97,7 +96,7 @@ module Cfcrypto
         best_key = key
       end
     end
-    return best_key, min_score
+    [best_key, min_score]
   end
 
   def self.attack_find_1char_xor(strs)
@@ -108,13 +107,13 @@ module Cfcrypto
     likely_key = ""
     strs.each do |s|
       key, score = attack_1char_xor(s)
-      if score < min_score
-        min_score = score
-        likely_string = s
-        likely_key = key
-      end
+      next if score > min_score
+
+      min_score = score
+      likely_string = s
+      likely_key = key
     end
-    return likely_string, likely_key
+    [likely_string, likely_key]
   end
 
   def self.hamming_dist(str1, str2)
@@ -131,12 +130,12 @@ module Cfcrypto
       # yielded invalid key sizes at the top
       dist_sum = 0
       1.upto((str.length / keysize) - 1) do |i|
-        dist_sum += hamming_dist(str[0, keysize], str[i*keysize, keysize])
+        dist_sum += hamming_dist(str[0, keysize], str[i * keysize, keysize])
       end
       # could also compute an average of the hamming dist for each block
       # combo... but we just need to normalize over str length here, sama-sama
       norm_dist = dist_sum.to_f / str.length
-      keysizes << {keysize: keysize, norm_dist: norm_dist}
+      keysizes << { keysize: keysize, norm_dist: norm_dist }
     end
     keysizes.sort_by! { |x| x[:norm_dist] }
 
@@ -155,10 +154,8 @@ module Cfcrypto
       # find most likely key for each virtual block
       cand_key = ""
       blocks.each do |b|
-        key, score = attack_1char_xor(b.join(""))
-        if key != nil && key.length > 0
-          cand_key << key[0]
-        end
+        key, = attack_1char_xor(b.join(""))
+        cand_key << key[0] if !key.nil? && !key.empty?
       end
 
       # skip this keysize if there's no viable candidate key
@@ -172,7 +169,7 @@ module Cfcrypto
       end
     end
 
-    return best_key
+    best_key
   end
 
   def self.aes_ecb_decrypt(key, msg)

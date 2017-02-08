@@ -8,8 +8,8 @@ class CfcryptoTest < Minitest::Test
   end
 
   def test_base64_hex
-    assert_equal "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d", \
-      Cfcrypto.str2hex(Cfcrypto.b64decode("SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"))
+    assert_equal("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d",
+      Cfcrypto.str2hex(Cfcrypto.b64decode("SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")))
   end
 
   def test_hex_xor
@@ -23,18 +23,20 @@ class CfcryptoTest < Minitest::Test
     # obs, exp
     assert_equal 0, Cfcrypto.chi_squared([0.4, 0.6], [0.4, 0.6])
     assert_equal 1, Cfcrypto.chi_squared([0, 0], [0.4, 0.6])
-    assert_in_delta 19.583, Cfcrypto.chi_squared([50, 45, 5],
-      [30, 60, 10])
+    assert_in_delta 19.583, Cfcrypto.chi_squared(
+      [50, 45, 5],
+      [30, 60, 10]
+    )
   end
 
   def test_count_freq
-    h = {"A" => 3, "B" => 2, "C" => 1}
+    h = { "A" => 3, "B" => 2, "C" => 1 }
     assert_equal h, Cfcrypto.count_freq("AABACB")
-    h = {"A" => 3, "B" => 2, "C" => 1}
+    h = { "A" => 3, "B" => 2, "C" => 1 }
     assert_equal h, Cfcrypto.count_freq("aabacb")
-    h = {"Z" => 1, "Y" => 1}
+    h = { "Z" => 1, "Y" => 1 }
     assert_equal h, Cfcrypto.count_freq("zy")
-    h = {"Z" => 1, "Y" => 1}
+    h = { "Z" => 1, "Y" => 1 }
     assert_equal h, Cfcrypto.count_freq(" z y ")
   end
 
@@ -45,7 +47,7 @@ class CfcryptoTest < Minitest::Test
   def test_attack_1char_xor
     input = Cfcrypto.hex2str("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
 
-    key, _ = Cfcrypto.attack_1char_xor(input)
+    key, = Cfcrypto.attack_1char_xor(input)
     plaintext = Cfcrypto.xor(input, key)
 
     assert_equal "Cooking MC's like a pound of bacon", plaintext

@@ -1,0 +1,40 @@
+Documentation:
+  Enabled: false
+
+# don't enforce metrics
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/LineLength:
+  Enabled: false
+  Max: 120
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false
+
+# don't require parameters to be fully aligned all the way to the right
+Style/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+# skips style of child classes and modules.
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+# disable check for this new ruby 2.3+ feature
+Style/FrozenStringLiteralComment:
+  EnforcedStyle: never
+
+# don't require indenting multiline method chains all the way to the right
+Style/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+# always use double quotes unless necessary
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+AllCops:
+  Exclude:
+    - 'bin/*'
