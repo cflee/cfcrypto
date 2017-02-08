@@ -28,7 +28,7 @@ module Cfcrypto
 
   def self.xor(str1, str2)
     # byte strings
-    raise "strfers must be same length" if str1.length != str2.length
+    raise "strings must be same length" if str1.length != str2.length
     res = str1.bytes.zip(str2.bytes).map { |a, b| a^b }.pack("C*")
     return res
   end
