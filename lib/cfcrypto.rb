@@ -1,3 +1,3 @@
 module Cfcrypto
-  require 'cfcrypto/crypto'
+  require "cfcrypto/crypto"
 end

@@ -1,5 +1,5 @@
-require 'minitest/autorun'
-require 'cfcrypto'
+require "minitest/autorun"
+require "cfcrypto"
 
 class CfcryptoTest < Minitest::Test
   def test_hex_base64
@@ -28,18 +28,18 @@ class CfcryptoTest < Minitest::Test
   end
 
   def test_count_freq
-    h = {'A' => 3, 'B' => 2, 'C' => 1}
-    assert_equal h, Cfcrypto.count_freq('AABACB')
-    h = {'A' => 3, 'B' => 2, 'C' => 1}
-    assert_equal h, Cfcrypto.count_freq('aabacb')
-    h = {'Z' => 1, 'Y' => 1}
-    assert_equal h, Cfcrypto.count_freq('zy')
-    h = {'Z' => 1, 'Y' => 1}
-    assert_equal h, Cfcrypto.count_freq(' z y ')
+    h = {"A" => 3, "B" => 2, "C" => 1}
+    assert_equal h, Cfcrypto.count_freq("AABACB")
+    h = {"A" => 3, "B" => 2, "C" => 1}
+    assert_equal h, Cfcrypto.count_freq("aabacb")
+    h = {"Z" => 1, "Y" => 1}
+    assert_equal h, Cfcrypto.count_freq("zy")
+    h = {"Z" => 1, "Y" => 1}
+    assert_equal h, Cfcrypto.count_freq(" z y ")
   end
 
   def test_english_score
-    assert_in_delta 77.621, Cfcrypto.english_score('The quick brown fox jumped over the lazy black dog')
+    assert_in_delta 77.621, Cfcrypto.english_score("The quick brown fox jumped over the lazy black dog")
   end
 
   def test_attack_1char_xor
@@ -52,7 +52,7 @@ class CfcryptoTest < Minitest::Test
   end
 
   def test_attack_find_1char_xor
-    inputs = File.readlines('test/1-4.txt').map(&:chomp)
+    inputs = File.readlines("test/1-4.txt").map(&:chomp)
       .map { |l| Cfcrypto.hex2str(l) }
     string, key = Cfcrypto.attack_find_1char_xor(inputs)
     plaintext = Cfcrypto.xor(string, key)
