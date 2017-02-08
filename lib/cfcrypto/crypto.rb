@@ -174,4 +174,33 @@ module Cfcrypto
     # call Cipher#final to ensure the last block of data is handled correctly
     cipher.update(msg) + cipher.final
   end
+
+  def self.split_blocks(str, size)
+    # split a string into an array of blocks: strings of certain size
+    res = []
+    (str.length.to_f / size).ceil.times do |i|
+      res << str[i * size..(i + 1) * size - 1]
+    end
+    res
+  end
+
+  def self.detect_ecb(strs)
+    # array of ciphertext blocks of a particular size
+    identical_count = 0
+    strs.each_with_index do |s, i|
+      next if i.zero?
+      identical_count += 1 if strs[0] == s
+    end
+    identical_count.positive?
+  end
+
+  def self.detect_ecb_from_list(strs, size)
+    # array of ciphertexts
+    result = []
+    strs.each_with_index do |str, i|
+      blocks = split_blocks(str, size)
+      result << i if detect_ecb(blocks)
+    end
+    result
+  end
 end

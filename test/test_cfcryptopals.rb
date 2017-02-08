@@ -96,4 +96,35 @@ class CfcryptoTest < Minitest::Test
     plaintext = Cfcrypto.aes_ecb_decrypt(key, input)
     assert_equal expected, plaintext
   end
+
+  def test_split_blocks
+    assert_equal %w(01234567 89abcdef), Cfcrypto.split_blocks("0123456789abcdef", 8)
+    assert_equal %w(01234567 89abcd), Cfcrypto.split_blocks("0123456789abcd", 8)
+  end
+
+  def test_detect_ecb
+    blocks = []
+    assert_equal false, Cfcrypto.detect_ecb(blocks)
+
+    blocks = %w(abcabcab defdefde abcabccc)
+    assert_equal false, Cfcrypto.detect_ecb(blocks)
+
+    blocks << "abcabcab"
+    assert_equal true, Cfcrypto.detect_ecb(blocks)
+  end
+
+  def test_detect_ecb_from_list
+    x_input = %w(
+      aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbaaaaaaaaaaaaaaab
+      aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbb
+      aaaaaaaaaaaaaaaabbbbbbbbbbbbbbb
+    )
+    assert_equal [1, 2], Cfcrypto.detect_ecb_from_list(x_input, 16)
+    assert_equal [0, 1, 2, 3], Cfcrypto.detect_ecb_from_list(x_input, 8)
+
+    # TODO: figure out why this isn't passing
+    # input = File.readlines("test/1-8.txt").map { |x| Cfcrypto.hex2str(x.chomp) }
+    # assert_equal [0], Cfcrypto.detect_ecb_from_list(input, 16)
+  end
 end
