@@ -278,28 +278,4 @@ module Cfcrypto
     end
   end
 
-  def self.aes_encrypt_oracle_challenger
-    # craft challenge
-    # objective is to ensure that we control at least two blocks, regardless
-    # of the prefix/suffixed random bytes, so we can determine if ECB or not
-    # need at least (16 - 5) in front and behind, plus (16 * 2) in middle
-    # 11 * 2 + 16 * 2 = 54
-    msg = "A" * 54
-
-    # do this repeatedly
-    50.times do
-      # send to oracle
-      ciphertext, coin = aes_encrypt_oracle(msg)
-
-      # inspect blocks two and three
-      blocks = split_blocks(ciphertext, 16)
-      coin_guess = blocks[1] == blocks[2] ? 0 : 1
-
-      # verify result
-      return false if coin_guess != coin
-    end
-
-    # all is well if did not return early
-    true
-  end
 end
