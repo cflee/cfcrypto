@@ -278,4 +278,17 @@ module Cfcrypto
     end
   end
 
+  # consistent but unknown key for challenge 2-12
+  AES_ENCRYPT_ORACLE_2_KEY = generate_key(16)
+
+  def self.aes_encrypt_oracle_2(msg)
+    suffix = b64decode(<<~HEREDOC)
+      Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkg
+      aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq
+      dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg
+      YnkK
+      HEREDOC
+    plaintext = msg + suffix
+    aes_ecb_encrypt(AES_ENCRYPT_ORACLE_2_KEY, plaintext)
+  end
 end

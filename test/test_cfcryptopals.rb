@@ -201,4 +201,73 @@ class CfcryptoTest < Minitest::Test
     # all is well if did not return early
     pass
   end
+
+  def test_aes_encrypt_oracle_2
+    # find the number of bytes to finish current block
+    prev_ciphertext_length = Cfcrypto.aes_encrypt_oracle_2("A").length
+    pad_size = 2
+    Kernel.loop do
+      ciphertext_length = Cfcrypto.aes_encrypt_oracle_2("A" * pad_size).length
+      if ciphertext_length > prev_ciphertext_length
+        # save this for next loop to use
+        prev_ciphertext_length = ciphertext_length
+        break
+      end
+      pad_size += 1
+    end
+
+    # now find the number of bytes to fill out next block
+    block_size = 1
+    Kernel.loop do
+      ciphertext_length = Cfcrypto.aes_encrypt_oracle_2("A" * (pad_size + block_size)).length
+      break if ciphertext_length > prev_ciphertext_length
+      block_size += 1
+    end
+
+    # compute suffix length (including up to 1 block of padding?)
+    suffix_size = Cfcrypto.aes_encrypt_oracle_2("A" * (pad_size + block_size)).length
+    suffix_size -= pad_size + block_size
+
+    # confirm it's ecb mode, bail if not
+    ciphertext = Cfcrypto.aes_encrypt_oracle_2("A" * (block_size * 2))
+    ciphertext_blocks = Cfcrypto.split_blocks(ciphertext, block_size)
+    flunk "aes_encrypt_oracle_2 not ecb mode" if ciphertext_blocks[0] != ciphertext_blocks[1]
+
+    # decrypt a byte at a time
+    msg_found = ""
+    blocks_found = 0
+    bytes_found = 0
+    while blocks_found * block_size + bytes_found < suffix_size
+      # increment first so that we know which byte we're targeting now
+      bytes_found = (bytes_found + 1) % block_size
+      blocks_found += 1 if bytes_found.zero?
+
+      # construct multiple-of-blocksize-minus-1 message for 'oracle block'
+      # this should go from (block_size - 1) to 0 and repeat
+      msg = "A" * (block_size - bytes_found)
+      oracle_block = Cfcrypto.aes_encrypt_oracle_2(msg)[blocks_found * block_size, block_size]
+
+      # brute force through all possible chars to see if they match oracle
+      # based on get last (block_size - 1) of constructed message
+      dict_msg = (msg + msg_found)[-(block_size - 1)..-1]
+      255.times do |i|
+        block = Cfcrypto.aes_encrypt_oracle_2(dict_msg + i.chr)[0, block_size]
+        if oracle_block == block
+          msg_found << i.chr
+          break
+        end
+      end
+    end
+
+    # remove padding
+    msg_found = Cfcrypto.pkcs7_padding_remove(msg_found)
+
+    # verify
+    assert_equal Cfcrypto.b64decode(<<~HEREDOC), msg_found
+      Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkg
+      aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq
+      dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg
+      YnkK
+      HEREDOC
+  end
 end

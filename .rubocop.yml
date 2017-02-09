@@ -8,6 +8,9 @@ Metrics/AbcSize:
 Metrics/ClassLength:
   Enabled: false
 
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
 Metrics/LineLength:
   Enabled: false
   Max: 120
@@ -33,6 +36,11 @@ Style/FrozenStringLiteralComment:
 # don't require indenting multiline method chains all the way to the right
 Style/MultilineMethodCallIndentation:
   EnforcedStyle: indented
+
+# don't forbid loop body that only contains a big if block
+# see: https://github.com/bbatsov/rubocop/issues/1238
+Style/Next:
+  Enabled: false
 
 # always use double quotes unless necessary
 Style/StringLiterals:
