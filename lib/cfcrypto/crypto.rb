@@ -291,4 +291,26 @@ module Cfcrypto
     plaintext = msg + suffix
     aes_ecb_encrypt(AES_ENCRYPT_ORACLE_2_KEY, plaintext)
   end
+
+  def self.cookie_parse(str)
+    result = {}
+    str.split("&").each do |s|
+      k, v = s.split("=")
+      result[k] = v
+    end
+    result
+  end
+
+  def self.profile_for(email)
+    email = email.gsub(/[&=]*/, "")
+    "email=#{email}&uid=10&role=user"
+  end
+
+  def self.profile_encode(email)
+    aes_ecb_encrypt(AES_ENCRYPT_ORACLE_2_KEY, profile_for(email))
+  end
+
+  def self.profile_decode(str)
+    cookie_parse(aes_ecb_decrypt(AES_ENCRYPT_ORACLE_2_KEY, str))
+  end
 end

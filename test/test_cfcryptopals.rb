@@ -270,4 +270,37 @@ class CfcryptoTest < Minitest::Test
       YnkK
       HEREDOC
   end
+
+  def test_cookie_parse
+    expected = { "foo" => "bar", "baz" => "qux", "zap" => "zazzle" }
+    observed = Cfcrypto.cookie_parse("foo=bar&baz=qux&zap=zazzle")
+    assert_equal expected, observed
+  end
+
+  def test_profile_for
+    assert_equal "email=abc@def.com&uid=10&role=user", Cfcrypto.profile_for("abc@def.com")
+    assert_equal "email=abc@def.com&uid=10&role=user", Cfcrypto.profile_for("abc@def&.com")
+    assert_equal "email=abc@def.com&uid=10&role=user", Cfcrypto.profile_for("abc@def=.com")
+  end
+
+  def test_profile_encode_decode
+    encoded = Cfcrypto.profile_encode("foo@bar.com")
+    assert_equal "foo@bar.com", Cfcrypto.profile_decode(encoded)["email"]
+    assert_equal "user", Cfcrypto.profile_decode(encoded)["role"]
+
+    # target construct:
+    # email=...<10>...
+    # <3>&uid=10&role=
+    # admin&uid=10&rol
+    # \x16 * 16        (padding block)
+    #
+    # derive first two blocks from a 13 char email
+    # derive third block from 10 char + "admin" email
+    # derive fourth block from 9 char email
+    part1 = Cfcrypto.split_blocks(Cfcrypto.profile_encode("lee@cflee.net"), 16)
+    part2 = Cfcrypto.split_blocks(Cfcrypto.profile_encode("0123@b.comadmin"), 16)
+    part3 = Cfcrypto.split_blocks(Cfcrypto.profile_encode("012@b.com"), 16)
+    magic = part1[0] + part1[1] + part2[1] + part3[2]
+    assert_equal "admin", Cfcrypto.profile_decode(magic)["role"]
+  end
 end
