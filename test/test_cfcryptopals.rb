@@ -136,15 +136,29 @@ class CfcryptoTest < Minitest::Test
   def test_pkcs7_padding
     # test not-a-multiple-of-block-size case
     input = "YELLOW SUBMARINE"
-    expected = "YELLOW SUBMARINE\x04\x04\x04\x04"
+    expected = input + "\x04\x04\x04\x04"
     padded = Cfcrypto.pkcs7_padding(input, 20)
     assert_equal expected, padded
     assert_equal input, Cfcrypto.pkcs7_padding_remove(padded)
 
     # test multiple-of-block-size case
     padded = Cfcrypto.pkcs7_padding(input, 16)
-    assert_equal "YELLOW SUBMARINE" + "\x10" * 16, padded
+    assert_equal input + "\x10" * 16, padded
     assert_equal input, Cfcrypto.pkcs7_padding_remove(padded)
+
+    padded = "YELLOW SUBMARINE\x10" + "\x0f" * 15
+    assert_equal "YELLOW SUBMARINE\x10", Cfcrypto.pkcs7_padding_remove(padded)
+
+    # test removing invalid padding
+    invalids = [
+      "YELLOW SUBMARINE" + "\x0f" + "\x10" * 15,
+      "YELLOW SUBMARINE" + "\x10" * 14 + "\x0f" + "\x10"
+    ]
+    invalids.each do |i|
+      assert_raises Cfcrypto::PaddingError do
+        Cfcrypto.pkcs7_padding_remove(i)
+      end
+    end
   end
 
   def test_aes_cbc

@@ -226,6 +226,9 @@ module Cfcrypto
 
   def self.pkcs7_padding_remove(str)
     qty = str[-1].ord
+    str[(-1 * qty)..-1].each_char do |s|
+      raise PaddingError if s.ord != qty
+    end
     str[0..(-1 * qty) - 1]
   end
 
